@@ -1,0 +1,15 @@
+# Secrets — Firebase service account key lives here. NEVER commit.
+.secrets/
+
+# Dependencies & build output
+node_modules/
+dist/
+
+# Editor / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

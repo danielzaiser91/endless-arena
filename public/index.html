@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Endless Arena — coming soon</title>
+  <style>
+    html, body {
+      margin: 0; height: 100%;
+      display: grid; place-items: center;
+      background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+      color: #e8e6e3; font-family: system-ui, sans-serif; text-align: center;
+    }
+    .sword { font-size: 4rem; animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1) rotate(-8deg); opacity: .85; }
+      50%      { transform: scale(1.15) rotate(8deg); opacity: 1; }
+    }
+    h1 { margin: .5rem 0 0; letter-spacing: .08em; }
+    p  { color: #9aa7b8; margin: .4rem 0; }
+    a  { color: #7fc4ff; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="sword">⚔️</div>
+    <h1>ENDLESS ARENA</h1>
+    <p>A tiny infinite auto-battler. Coming soon.</p>
+    <p lang="de">Ein winziger unendlicher Auto-Battler. Bald verfügbar.</p>
+    <p><a href="https://github.com/danielzaiser91/endless-arena">github.com/danielzaiser91/endless-arena</a></p>
+  </main>
+</body>
+</html>

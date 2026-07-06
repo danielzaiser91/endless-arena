@@ -41,7 +41,7 @@ export function showBanner(saveNow: () => void): void {
     banner.textContent = t('update.reloading');
     void bustAndReload(saveNow);
   });
-  document.getElementById('ui')?.append(banner);
+  document.body.append(banner);
 }
 
 async function bustAndReload(saveNow: () => void): Promise<void> {

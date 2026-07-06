@@ -11,23 +11,69 @@ body {
 
 #arena-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
-#lang-btn {
-  position: absolute; top: 12px; right: 12px; z-index: 20;
-  padding: 0.35rem 0.8rem; border-radius: 6px;
-  border: 1px solid var(--gold); background: rgba(10, 10, 18, 0.55); color: var(--gold);
-  cursor: pointer; font-size: 0.8rem;
+button {
+  font-family: inherit; cursor: pointer; color: var(--text);
+  background: rgba(232, 182, 76, 0.12); border: 1px solid rgba(232, 182, 76, 0.5);
+  border-radius: 5px; padding: 0.25rem 0.6rem; font-size: 0.8rem;
 }
+button:hover:not(:disabled) { background: rgba(232, 182, 76, 0.25); }
+button:disabled { opacity: 0.4; cursor: default; }
+button.active { background: var(--gold); color: #1a1408; }
 
 #hud {
   position: absolute; top: 12px; left: 12px; z-index: 20;
   background: rgba(10, 10, 18, 0.55); border: 1px solid rgba(232, 182, 76, 0.4);
   border-radius: 8px; padding: 0.5rem 0.8rem; font-size: 0.82rem;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px); max-width: min(90vw, 420px);
 }
 #hud .hud-stats { display: flex; gap: 0.9rem; flex-wrap: wrap; }
 #hud .hud-stats span:nth-child(1) { color: var(--gold); }
+#hud .hud-arena-row { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.3rem; }
+#hud .hud-arena-row button { padding: 0.1rem 0.5rem; }
+#hud .hud-ttk-warn { color: #e6795a; }
 #hud .hud-note { margin-top: 0.3rem; color: #9aa7b8; font-size: 0.76rem; }
 #hud .hud-note:empty { display: none; }
+
+/* ── Panel shell (M3): bottom-docked tab sheet, arena view stays visible above it ── */
+#panel-shell {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 20;
+  display: flex; flex-direction: column;
+  background: rgba(10, 10, 18, 0.72); backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(232, 182, 76, 0.4);
+  max-height: 42vh;
+}
+.panel-tabbar { display: flex; overflow-x: auto; border-bottom: 1px solid rgba(232, 182, 76, 0.25); flex-shrink: 0; }
+.panel-tabbar button { border: none; border-radius: 0; background: transparent; flex: 1 0 auto; padding: 0.55rem 0.4rem; font-size: 0.78rem; }
+.panel-tabbar button.active { background: rgba(232, 182, 76, 0.18); color: var(--gold); border-bottom: 2px solid var(--gold); }
+.panel-content { overflow-y: auto; padding: 0.7rem 0.9rem 1rem; font-size: 0.82rem; }
+.panel { display: none; flex-direction: column; gap: 0.5rem; }
+.panel.active { display: flex; }
+
+.stats-grid, .ascension-spend-grid { display: flex; flex-direction: column; gap: 0.35rem; }
+.stats-row, .ascension-spend-row { display: flex; align-items: center; gap: 0.6rem; }
+.stats-row .stats-label, .ascension-spend-row span:first-child { flex: 0 0 70px; }
+.stats-row .stats-value, .ascension-spend-row span:nth-child(2) { flex: 0 0 30px; text-align: center; color: var(--gold); }
+.stats-respec { align-self: flex-start; }
+
+.gear-auto-row { display: flex; align-items: center; gap: 0.4rem; }
+.gear-slots { display: flex; flex-direction: column; gap: 0.3rem; }
+.gear-slot-row { display: flex; align-items: center; gap: 0.5rem; }
+.gear-slot-name { flex: 0 0 70px; color: #9aa7b8; }
+.gear-slot-item { flex: 1 1 auto; }
+.gear-forge-info { flex: 0 0 auto; font-size: 0.72rem; color: #9aa7b8; }
+.gear-inbox { margin-top: 0.4rem; border-top: 1px solid rgba(232, 182, 76, 0.2); padding-top: 0.4rem; }
+.gear-inbox-row { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.2rem; }
+.gear-inbox-row span { flex: 1 1 auto; }
+
+.path-choice-row { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.ascension-locked { color: #9aa7b8; font-size: 0.76rem; }
+
+.settings-lang-row { display: flex; align-items: center; gap: 0.5rem; }
+
+.ascension-flash {
+  position: fixed; inset: 0; z-index: 100; background: #fff; pointer-events: none;
+}
 
 /* ── Update banner (ported from Stardust to Singularity, implementation.md §16) ── */
 #update-banner {

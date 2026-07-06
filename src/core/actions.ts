@@ -43,6 +43,10 @@ export function setAutoEquip(state: GameState, on: boolean): void {
   state.autoEquip = on;
 }
 
+export function setLanguage(state: GameState, lang: GameState['lang']): void {
+  state.lang = lang;
+}
+
 export function equipFromInbox(state: GameState, index: number): void {
   const item = state.inbox[index];
   if (!item) return;

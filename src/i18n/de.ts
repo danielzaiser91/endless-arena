@@ -16,7 +16,7 @@ export const de: Record<keyof typeof en, string> = {
   'tab.skills': 'Skills',
   'tab.gear': 'Ausrüstung',
   'tab.path': 'Pfad',
-  'tab.ascension': 'Aszension',
+  'tab.ascension': 'Aufstieg',
   'tab.settings': 'Einstellungen',
   'tab.ranking': 'Rangliste',
 
@@ -29,10 +29,10 @@ export const de: Record<keyof typeof en, string> = {
   'stats.respec': 'Zurücksetzen',
 
   'skills.points': 'Skillpunkte',
-  'skills.learned': 'Gelernte Knoten',
-  'skills.next': 'Nächster Knoten',
+  'skills.learned': 'Gelernte Skills',
+  'skills.next': 'Nächster Skill',
   'skills.learn': 'Lernen',
-  'skills.infinite': 'unendlicher Sammel-Knoten',
+  'skills.infinite': 'unendlicher Sammel-Skill',
   'skills.critChance': 'Krit.-Chance',
   'skills.critDamage': 'Krit.-Schaden',
   'skills.gold': 'Gold-Gewinn',
@@ -93,9 +93,9 @@ export const de: Record<keyof typeof en, string> = {
   'path.name.tempestArcher': 'Sturmschütze',
 
   'ascension.echoes': 'Echos',
-  'ascension.gainOnAscend': 'Gewinn bei Aszension',
-  'ascension.button': 'Aszendieren',
-  'ascension.confirm': 'Jetzt aszendieren? Level, Ausrüstung, Gold und Punkte werden zurückgesetzt — Klasse und Echos bleiben.',
+  'ascension.gainOnAscend': 'Gewinn bei Aufstieg',
+  'ascension.button': 'Aufsteigen',
+  'ascension.confirm': 'Jetzt aufsteigen? Level, Ausrüstung, Gold und Punkte werden zurückgesetzt — Klasse und Echos bleiben.',
   'ascension.locked': 'Schaltet frei, sobald eine Meisterschaft gewählt ist (Level 50).',
   'ascension.spend': 'Ausgeben',
 

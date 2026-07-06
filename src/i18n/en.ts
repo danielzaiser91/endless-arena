@@ -27,10 +27,10 @@ export const en = {
   'stats.respec': 'Respec',
 
   'skills.points': 'Skill points',
-  'skills.learned': 'Nodes learned',
-  'skills.next': 'Next node',
+  'skills.learned': 'Skills learned',
+  'skills.next': 'Next skill',
   'skills.learn': 'Learn',
-  'skills.infinite': 'infinite dump node',
+  'skills.infinite': 'infinite dump skill',
   'skills.critChance': 'crit chance',
   'skills.critDamage': 'crit damage',
   'skills.gold': 'gold gain',

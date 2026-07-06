@@ -103,9 +103,12 @@ Ascension does **not** reset class (grind, not re-decisions).
 
 ## 9. Ascension (meta progression — the anti-wall)
 
-- Unlocks at level 50 (with the Mastery choice).
+- **Unlocks once Mastery is chosen** (character-level milestone track, ~L50) — a one-time structural
+  gate, decoupled from the infinite grind axis below.
 - **Reset**: level → 1, gear + gold + skill/attribute points → gone. **Kept**: class/sub-path/mastery, best-level stats, settings.
-- **Gain**: `Echoes = floor((bestLevelThisRun − 40) / 5)` (tune via sim) — every run past L50 pays out.
+- **Gain**: `Echoes = floor((bestArenaLevelThisRun − 40) / 5)`, floored at 0 (tune via sim) — scales
+  with how far you *pushed the arena*, not your character level, so the reward always reflects the
+  actual grind.
 - **Spend**: each Echo = **permanent +2% to one attribute** of your choice (Power/Speed/Fortune/Wisdom). Stacks additively without limit, applies from level 1.
 - Since Echo bonuses grow without bound and enemy HP is a fixed curve, **any wall is breakable by ascending** — this is the mathematical no-stuck guarantee.
 - Ascension has the biggest ceremony in the game: supernova-style 3D burst + unique sound.
@@ -178,24 +181,78 @@ tests/         vitest: unit + balance bands
 public/        static assets (audio, icons)
 ```
 
-## 16. Verification & Balance Targets
+## 16. Versioning & Update Banner
+
+Ported 1:1 from the sibling project *Stardust to Singularity*, where this exact mechanism is
+already proven in production. Two **separate** version concepts:
+
+- **`SAVE_VERSION`** (in `constants.ts`) — schema version of the save data. Bump only on
+  semantic save changes; `save.ts` migrates old saves forward. New fields alone don't need a bump
+  (they just default in `initialState()`).
+- **`__APP_VERSION__`** (build-time constant) — identifies *this deploy*, unrelated to save schema.
+  Drives the live update-banner.
+
+**Mechanism:**
+
+1. `vite.config.ts` defines `__APP_VERSION__ = "${package.json version}+${BUILD_VERSION}"`, where
+   `BUILD_VERSION` is an env var the CI workflow sets to the short commit SHA (`dev` locally).
+2. CI, after `vite build`, stamps `dist/sw.js` (replaces a `__BUILD__` placeholder with the SHA,
+   forcing a fresh service-worker cache name per deploy) and writes `dist/version.json` with the
+   same version string.
+3. Client (`src/ui/updateBanner.ts`): ~60 s after load, then every ~3 min, fetches
+   `version.json?_=<timestamp>` with `cache: 'no-store'`. If the fetched version differs from the
+   compiled-in `__APP_VERSION__`, show a persistent top banner (EN/DE via i18n, pulsing border).
+4. Click on the banner → save the game, `unregister()` all service workers, delete all Cache
+   Storage entries, then `location.href = pathname + '?v=' + Date.now()` (belt-and-braces cache bust).
+5. The service worker is cache-first for static assets but **always** lets `version.json` (and any
+   streamed audio) hit the network, so the check itself is never stale.
+6. No-op in dev (`import.meta.env.DEV` → version is always `"dev"`, polling would be meaningless).
+7. A dev-console hook (`dev.fakeUpdate()`) shows the banner on demand for manual testing without
+   waiting for a real deploy.
+
+This is infrastructure, not gameplay — it ships in **M0**, before any game logic exists, exactly
+like the placeholder Pages deploy already live today.
+
+## 17. Verification & Balance Testing Tooling
 
 - `npm test` — unit tests + fast balance bands (must be green before every push; CI blocks deploy).
-- `npm run sim -- --profile active --hours 5` — full progression check. Target bands:
+- **Sim CLI**: `npm run sim -- --until <checkpoint> --profile <active|idle> [--maxHours N] [--seed N]`.
+  Runs the headless `tick()` in bulk and prints a one-line stat snapshot at the checkpoint (and
+  every 10 arena levels along the way): `level, arenaLevel, itemScore, DPS, TTKatCurrentLevel, gold, echoes, wallClockHours`.
+  This is how balance gets *inspected*, not just pass/failed — the printed curve is what you read
+  to decide which constant to nudge.
+- **Checkpoints** (named, so any stage is reachable directly without replaying from zero):
+  `adventurer` (L1) · `path_choice` (L10) · `subpath` (L25) · `mastery` (L50) · `first_ascension` ·
+  `level100` · `level250` · `level1000` (long-tail infinite-loop sanity check).
+- **Dev console** (browser, `window.dev`, non-DEV-stripped): `dev.state()`, `dev.grant(path, value)`,
+  `dev.tick(seconds)`, `dev.setArenaLevel(n)`, `dev.fakeUpdate()` — mirrors the console already
+  shipped in Stardust to Singularity, so every stage of the live game is manually pokeable too.
+- `tests/balance.test.ts` encodes the bands below as fast assertions (small `--maxHours`, checked
+  every push); `npm run sim -- --profile active --hours 5` is the full manual progression check.
 
 | Checkpoint | Active profile | Idle profile |
 |---|---|---|
-| Level 10 (path choice) | 20–30 min | ≤ 60 min |
-| Level 25 (sub-path) | 60–90 min | ≤ 3 h |
-| Level 50 (mastery + ascension) | 2.5–3 h | ≤ 8 h |
-| First Ascension | 3–4 h | ≤ 10 h |
+| Level 10 (path choice) | 15–30 min | ≤ 60 min |
+| Level 25 (sub-path) | 45–90 min | ≤ 3 h |
+| Level 50 (mastery) | 2.5–3.2 h | ≤ 8 h |
+| First Ascension | 2.8–4 h | ≤ 14 h |
 
-- **No-wall metric** (sim-enforced): in the first 5 h, no stretch > 15 min without *some* upgrade event (level, better item, skill point, forge level, or Echo). Post-3h: time-to-next-arena-level may grow, but each Ascension must restore push pace.
+Bands were widened slightly from the original estimate once real sim data existed (implementation.md
+is a living plan — "tune via sim" means the numbers here follow the sim, not the other way round).
 
-## 17. Build Milestones
+- **No-wall metric** (sim-enforced): in the first 5 h, no stretch > 20 min without *some* upgrade event (level, better item, skill point, forge level, or Echo).
+- **Long-tail sanity** (`level100`/`level250`/`level1000` checkpoints, run with a generous `--maxHours`):
+  this is a **stability**, not a pace, check — confirms the infinite loop never divides-by-zero,
+  never produces NaN/negative TTK, and that Ascensions monotonically accumulate Echoes and
+  eventually lift `lifetimeBestArenaLevel` past any plateau, however slowly. A 100-simulated-hour
+  active-profile run is the reference check (`tests/balance.test.ts`); reaching a specific arena
+  level within a fixed wall-clock budget is *not* asserted here — only that the plateau breaks.
+
+## 18. Build Milestones
 
 | # | Milestone | Proof |
 |---|---|---|
+| M0 | Repo scaffold: Vite+TS+Vitest, CI (test→build→deploy), i18n skeleton, version-buster infra (§16) | placeholder still deploys green |
 | M1 | Core sim: state, tick, combat, XP, loot, enemies | tests + sim run headless |
 | M2 | Minimal render: arena, hero, enemy, attack/death anims | playable in browser |
 | M3 | UI shell + i18n: stats panel, arena-level picker, settings | EN/DE toggle works |
@@ -204,11 +261,11 @@ public/        static assets (audio, icons)
 | M6 | Ascension + Echoes | wall-break proven in sim |
 | M7 | Firebase leaderboard (live top-100) | two browsers see each other |
 | M8 | Audio + polish pass (all juice effects) | everything animated + sounds |
-| M9 | Balance sim runs vs. §16 bands; mobile perf check | bands green, 60 fps phone |
+| M9 | Balance sim runs vs. §17 bands; mobile perf check | bands green, 60 fps phone |
 
 Deploy is continuous: every push to `main` → GitHub Actions → Pages.
 
-## 18. Non-Goals (keep it tiny)
+## 19. Non-Goals (keep it tiny)
 
 No PvP, no accounts/passwords, no server code beyond Firestore rules, no external 3D model
 pipeline, no shop/monetization, no quests/story, no multiple heroes, no pets/minions (visual

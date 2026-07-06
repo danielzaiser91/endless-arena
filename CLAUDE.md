@@ -22,4 +22,5 @@ Design (bindend): [implementation.md](implementation.md) · Agent-Startprompt: [
 
 - `npm test` muss vor jedem Push grün sein; CI (Test → Build → Pages) blockt sonst den Deploy.
 - Deploy: Push auf `main` → GitHub Actions → Pages. Kein manueller Deploy.
-- Balance-Zielbänder + No-Wall-Metrik: implementation.md §16, geprüft via `npm run sim`.
+- Balance-Zielbänder + No-Wall-Metrik: implementation.md §17, geprüft via `npm run sim`.
+- Versionierung: `SAVE_VERSION` (Save-Schema) vs. `__APP_VERSION__` (Deploy/Update-Banner) sind getrennte Konzepte — implementation.md §16.

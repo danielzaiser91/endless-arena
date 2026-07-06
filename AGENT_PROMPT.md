@@ -12,7 +12,7 @@ before writing any code. Where this prompt and `implementation.md` disagree, `im
 
 ## Mission
 
-Implement the game end-to-end, milestone by milestone (implementation.md §17, M1→M9), on this
+Implement the game end-to-end, milestone by milestone (implementation.md §18, M0→M9), on this
 repo's `main` branch. Every push deploys automatically to GitHub Pages via the existing workflow
 (`.github/workflows/deploy.yml`) — when the first playable build exists, replace the placeholder
 deployment (`public/` upload) with the Vite build output, keeping the test→build→deploy order.
@@ -25,7 +25,7 @@ deployment (`public/` upload) with the Vite build output, keeping the test→bui
 2. **Purity**: `src/core/` never imports DOM, Three, or Audio. One `tick()` drives play, offline
    progress, sim, and tests.
 3. **Balance**: every tunable number lives in `src/core/constants.ts` and nowhere else.
-   Balance changes = edit constants → run sim → check bands (implementation.md §16).
+   Balance changes = edit constants → run sim → check bands (implementation.md §17).
 4. **Determinism**: seeded RNG in game state; no `Math.random()` in core.
 5. **Never stuck**: all nine guarantees in implementation.md §10 must hold. The sim's no-wall
    metric is a required test, not a suggestion.
@@ -64,7 +64,7 @@ local-fallback leaderboard until it's resolved.
 
 ## Definition of Done
 
-- All milestones M1–M9 complete; balance bands and no-wall metric green in sim.
+- All milestones M0–M9 complete; balance bands and no-wall metric green in sim.
 - Live on GitHub Pages: fights, loot, classes (3 decision points in first ~3 h), skill trees,
   forge, Ascension, live Firebase leaderboard, EN/DE toggle, music + SFX, offline progress.
 - A stranger can open the URL on a phone and grind happily forever without ever getting stuck.

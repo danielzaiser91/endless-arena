@@ -1,7 +1,7 @@
 # Agent Prompt — Build "Endless Arena"
 
 > Copy everything below into a fresh Claude Code session started in this repo's root
-> (`C:\code\ai\adventure 3d`) when development should begin.
+> (`C:\code\ai\endless-arena`) when development should begin.
 
 ---
 

@@ -15,4 +15,8 @@ export interface PanelDeps {
 export interface Panel {
   root: HTMLElement;
   update: (state: GameState) => void;
+  /** Called when this becomes the visible tab — e.g. to open a live subscription. */
+  onActivate?: () => void;
+  /** Called when another tab is selected — e.g. to close a live subscription (free-tier reads). */
+  onDeactivate?: () => void;
 }

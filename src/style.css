@@ -67,6 +67,19 @@ button.active { background: var(--gold); color: #1a1408; }
 
 .path-choice-row { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 
+.ranking-nick-row { display: flex; gap: 0.4rem; }
+.ranking-nick-row input {
+  flex: 1 1 auto; background: rgba(255,255,255,0.05); border: 1px solid rgba(232, 182, 76, 0.4);
+  border-radius: 5px; color: var(--text); padding: 0.25rem 0.5rem; font-size: 0.8rem;
+}
+.ranking-status { color: #9aa7b8; font-size: 0.76rem; min-height: 1em; }
+.ranking-list { display: flex; flex-direction: column; gap: 0.15rem; }
+.ranking-row { display: flex; gap: 0.6rem; padding: 0.15rem 0.3rem; border-radius: 4px; }
+.ranking-row-you { background: rgba(232, 182, 76, 0.15); }
+.ranking-rank { flex: 0 0 32px; color: #9aa7b8; }
+.ranking-name { flex: 1 1 auto; }
+.ranking-level { flex: 0 0 auto; color: var(--gold); }
+
 .ascension-locked { color: #9aa7b8; font-size: 0.76rem; }
 
 .settings-lang-row { display: flex; align-items: center; gap: 0.5rem; }

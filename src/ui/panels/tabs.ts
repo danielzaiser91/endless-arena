@@ -5,6 +5,7 @@ import { createSkillsPanel } from './skills';
 import { createGearPanel } from './gear';
 import { createPathPanel } from './path';
 import { createAscensionPanel } from './ascension';
+import { createRankingPanel } from './ranking';
 import { createSettingsPanel } from './settings';
 import type { Panel, PanelDeps } from './types';
 
@@ -20,6 +21,7 @@ const TAB_DEFS: TabDef[] = [
   { id: 'gear', labelKey: 'tab.gear', build: createGearPanel },
   { id: 'path', labelKey: 'tab.path', build: createPathPanel },
   { id: 'ascension', labelKey: 'tab.ascension', build: createAscensionPanel },
+  { id: 'ranking', labelKey: 'tab.ranking', build: createRankingPanel },
   { id: 'settings', labelKey: 'tab.settings', build: createSettingsPanel },
 ];
 
@@ -58,16 +60,23 @@ export function createTabShell(container: HTMLElement, deps: TabShellDeps): TabS
   };
 
   function setActive(id: string): void {
+    if (id === activeId && panels[id]) {
+      panels[id].update(deps.getState());
+      return;
+    }
+    panels[activeId]?.onDeactivate?.();
     activeId = id;
     for (const def of TAB_DEFS) {
       const isActive = def.id === id;
       tabButtons[def.id].classList.toggle('active', isActive);
       panels[def.id].root.classList.toggle('active', isActive);
     }
+    panels[activeId].onActivate?.();
     panels[activeId].update(deps.getState());
   }
 
   function build(): void {
+    panels[activeId]?.onDeactivate?.();
     tabBar.innerHTML = '';
     content.innerHTML = '';
     panels = {};
@@ -83,7 +92,12 @@ export function createTabShell(container: HTMLElement, deps: TabShellDeps): TabS
       tabButtons[def.id] = btn;
       tabBar.appendChild(btn);
     }
-    setActive(activeId);
+    for (const def of TAB_DEFS) {
+      tabButtons[def.id].classList.toggle('active', def.id === activeId);
+      panels[def.id].root.classList.toggle('active', def.id === activeId);
+    }
+    panels[activeId].onActivate?.();
+    panels[activeId].update(deps.getState());
   }
 
   function rebuild(): void {
@@ -100,6 +114,9 @@ export function createTabShell(container: HTMLElement, deps: TabShellDeps): TabS
   return {
     root,
     refresh,
-    destroy: () => root.remove(),
+    destroy: () => {
+      panels[activeId]?.onDeactivate?.();
+      root.remove();
+    },
   };
 }

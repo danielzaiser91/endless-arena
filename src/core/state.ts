@@ -65,6 +65,9 @@ export interface GameState {
   echoes: number;
   echoInvested: Attributes;
   ascensions: number;
+
+  /** Leaderboard nickname (implementation.md §11) — empty until first submit. */
+  nickname: string;
 }
 
 function emptyAttributes(): Attributes {
@@ -114,5 +117,7 @@ export function initialState(seed = Date.now()): GameState {
     echoes: 0,
     echoInvested: emptyAttributes(),
     ascensions: 0,
+
+    nickname: '',
   };
 }

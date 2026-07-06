@@ -47,6 +47,10 @@ export function setLanguage(state: GameState, lang: GameState['lang']): void {
   state.lang = lang;
 }
 
+export function setNickname(state: GameState, name: string): void {
+  state.nickname = name.trim().slice(0, 16);
+}
+
 export function equipFromInbox(state: GameState, index: number): void {
   const item = state.inbox[index];
   if (!item) return;

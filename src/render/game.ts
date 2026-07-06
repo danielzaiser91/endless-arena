@@ -1,8 +1,10 @@
 import * as THREE from 'three';
+import * as C from '../core/constants';
 import { tick } from '../core/tick';
 import { enemyHp, isBoss } from '../core/enemies';
 import { deserialize, serialize } from '../core/save';
-import { initialState, type GameState } from '../core/state';
+import { initialState, type GameState, type Item } from '../core/state';
+import type { Mults } from '../core/formulas';
 import { setLang, t } from '../i18n';
 import { installDevConsole } from '../dev/console';
 import { createHud, type Hud } from '../ui/hud';
@@ -10,6 +12,7 @@ import { createTabShell, type TabShell } from '../ui/panels/tabs';
 import { createScene, type SceneCtx } from './scene';
 import { buildHero, buildEnemy, type HeroActor, type EnemyActor } from './actors';
 import { TweenManager, easeOutQuad, easeInQuad } from './effects';
+import { armFirstGesture, crossfadeMusic, initAudio, playSfx, startMusic } from '../audio/mixer';
 
 const SAVE_KEY = 'endless-arena-save';
 const AUTOSAVE_INTERVAL = 10;
@@ -18,6 +21,8 @@ const MAX_OFFLINE_SECONDS = 8 * 3600;
 const OFFLINE_CHUNK_SECONDS = 30;
 const MAX_FRAME_DT = 0.1;
 const VISUAL_ATTACKS_PER_SECOND_CAP = 6;
+const SCREEN_SHAKE_DURATION = 0.15;
+const SCREEN_SHAKE_MAGNITUDE = 0.08;
 
 export class GameView {
   private state: GameState;
@@ -32,6 +37,8 @@ export class GameView {
   private panelRefreshClock = 0;
   private lastFrameAt = performance.now();
   private hiddenAt = 0;
+  private ttkWarn = false;
+  private shakeTimeLeft = 0;
   private raf = 0;
 
   constructor(container: HTMLElement) {
@@ -72,6 +79,14 @@ export class GameView {
 
     installDevConsole({ getState: () => this.state, refresh: () => this.tabs.refresh(), save: () => this.save() });
 
+    armFirstGesture(() => {
+      initAudio(this.state.audio);
+      startMusic();
+    });
+    document.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).tagName === 'BUTTON') playSfx('click');
+    });
+
     this.raf = requestAnimationFrame(this.frame);
   }
 
@@ -85,24 +100,30 @@ export class GameView {
   };
 
   private step(dt: number): void {
-    const killsBefore = this.state.kills;
     const levelBefore = this.state.level;
-    const mults = tick(this.state, dt);
+    const result = tick(this.state, dt);
 
-    if (this.state.kills > killsBefore) {
-      this.onKill();
+    if (result.kills > 0) {
+      this.onKill(result.drops);
     }
     if (this.state.level > levelBefore) {
       this.playLevelUpFx();
+      playSfx('levelup');
     }
 
-    this.updateAttackSwing(dt, mults.attacksPerSecond);
+    const ttk = result.dps > 0 ? enemyHp(this.state.arenaLevel) / result.dps : Infinity;
+    const warnNow = ttk > C.TTK_WARN_SECONDS;
+    if (warnNow && !this.ttkWarn) playSfx('error');
+    this.ttkWarn = warnNow;
+
+    this.updateAttackSwing(dt, result);
     this.updateHpBar();
     this.tweens.update(dt);
     this.scene.updateCamera(dt);
+    this.applyScreenShake(dt);
     this.scene.renderer.render(this.scene.scene, this.scene.camera);
 
-    this.hud.update(this.state, mults.dps);
+    this.hud.update(this.state, result.dps);
 
     this.panelRefreshClock += dt;
     if (this.panelRefreshClock >= PANEL_REFRESH_INTERVAL) {
@@ -117,17 +138,22 @@ export class GameView {
     }
   }
 
-  private updateAttackSwing(dt: number, attacksPerSecond: number): void {
-    const visualRate = Math.min(VISUAL_ATTACKS_PER_SECOND_CAP, Math.max(0.2, attacksPerSecond));
+  private updateAttackSwing(dt: number, mults: Mults): void {
+    const visualRate = Math.min(VISUAL_ATTACKS_PER_SECOND_CAP, Math.max(0.2, mults.attacksPerSecond));
     const period = 1 / visualRate;
     this.attackClock += dt;
     if (this.attackClock >= period) {
       this.attackClock -= period;
-      this.playSwing();
+      this.playSwing(Math.random() < mults.critChance);
     }
   }
 
-  private playSwing(): void {
+  /**
+   * Crit isn't a discrete event in core — computeMults() bakes crit into a continuous expected-value
+   * DPS multiplier (avgCritMult), not per-hit rolls. This local Math.random() roll is purely cosmetic
+   * (matches the same probability, decorrelated per swing) and never touches core state.
+   */
+  private playSwing(isCrit: boolean): void {
     const weaponGroup = this.hero.weaponGroup;
     const startZ = -0.4;
     this.tweens.add(
@@ -137,17 +163,31 @@ export class GameView {
         this.tweens.add(0.18, (t) => (weaponGroup.rotation.z = startZ - 1.1 + easeOutQuad(t) * 1.1));
       },
     );
-    this.flashHit();
+    this.flashHit(isCrit);
+    playSfx(isCrit ? 'crit' : 'hit');
   }
 
-  private flashHit(): void {
+  private flashHit(isCrit: boolean): void {
     const bodyMat = this.enemy.materials[0];
-    bodyMat.emissive.set(0xffffff);
-    this.tweens.add(0.08, (t) => (bodyMat.emissiveIntensity = 1 - t));
+    bodyMat.emissive.set(isCrit ? 0xffcc55 : 0xffffff);
+    const duration = isCrit ? 0.16 : 0.08;
+    this.tweens.add(duration, (t) => (bodyMat.emissiveIntensity = (isCrit ? 2.2 : 1) * (1 - t)));
 
     const group = this.enemy.group;
     const baseX = group.position.x;
-    this.tweens.add(0.08, (t) => (group.position.x = baseX + easeOutQuad(1 - Math.abs(t * 2 - 1)) * 0.12));
+    const kick = isCrit ? 0.26 : 0.12;
+    this.tweens.add(duration, (t) => (group.position.x = baseX + easeOutQuad(1 - Math.abs(t * 2 - 1)) * kick));
+
+    if (isCrit) this.shakeTimeLeft = SCREEN_SHAKE_DURATION;
+  }
+
+  /** Screen-shake-lite on crits (implementation.md §12) — applied after the orbit camera each frame. */
+  private applyScreenShake(dt: number): void {
+    if (this.shakeTimeLeft <= 0) return;
+    this.shakeTimeLeft = Math.max(0, this.shakeTimeLeft - dt);
+    const magnitude = SCREEN_SHAKE_MAGNITUDE * (this.shakeTimeLeft / SCREEN_SHAKE_DURATION);
+    this.scene.camera.position.x += (Math.random() * 2 - 1) * magnitude;
+    this.scene.camera.position.y += (Math.random() * 2 - 1) * magnitude;
   }
 
   private updateHpBar(): void {
@@ -156,7 +196,7 @@ export class GameView {
     this.enemy.hpBarFg.scale.x = fraction;
   }
 
-  private onKill(): void {
+  private onKill(drops: Item[]): void {
     const deadEnemy = this.enemy;
     const startY = deadEnemy.group.position.y;
     const startScale = deadEnemy.group.scale.x;
@@ -170,6 +210,12 @@ export class GameView {
       },
       () => this.scene.enemySlot.remove(deadEnemy.group),
     );
+    playSfx('death');
+    if (drops.length > 0) {
+      playSfx('loot');
+      const bestTier = Math.max(...drops.map((d) => d.tier));
+      this.playLootBeamFx(deadEnemy.group.position, bestTier);
+    }
 
     const nextIsBoss = isBoss(this.state.arenaLevel);
     const targetScale = nextIsBoss ? 1.5 : 1;
@@ -177,6 +223,25 @@ export class GameView {
     this.enemy.group.scale.setScalar(0.01);
     this.scene.enemySlot.add(this.enemy.group);
     this.tweens.add(0.3, (t) => this.enemy.group.scale.setScalar(0.01 + easeOutQuad(t) * (targetScale - 0.01)));
+  }
+
+  /** Loot beam, colored by the drop's rarity tier (implementation.md §7, §12). */
+  private playLootBeamFx(position: THREE.Vector3, tier: number): void {
+    const beam = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.12, 0.02, 2.4, 12, 1, true),
+      new THREE.MeshBasicMaterial({ color: tierColor(tier), transparent: true, opacity: 0.7, side: THREE.DoubleSide, depthWrite: false }),
+    );
+    beam.position.copy(position);
+    beam.position.y += 1.2;
+    this.scene.scene.add(beam);
+    this.tweens.add(
+      0.6,
+      (t) => {
+        beam.position.y = position.y + 1.2 + t * 0.6;
+        (beam.material as THREE.MeshBasicMaterial).opacity = 0.7 * (1 - t);
+      },
+      () => this.scene.scene.remove(beam),
+    );
   }
 
   /** Swaps in a fresh enemy mesh with no death/spawn tween — used after a bulk catch-up. */
@@ -225,6 +290,7 @@ export class GameView {
       () => this.scene.scene.remove(pillar),
     );
     this.playLevelUpFx();
+    playSfx('classup');
   }
 
   /** Ascension: the biggest ceremony — supernova burst + screen flash (implementation.md §9, §12). */
@@ -253,6 +319,8 @@ export class GameView {
       (t) => (flash.style.opacity = String(0.85 * (1 - easeOutQuad(t)))),
       () => flash.remove(),
     );
+    playSfx('ascension');
+    crossfadeMusic();
   }
 
   private applyOfflineProgress(): void {
@@ -303,4 +371,10 @@ function loadState(): GameState {
 
 function hueForLevel(level: number): number {
   return ((level * 0.13) % 1 + 1) % 1;
+}
+
+/** Common..Mythic (0..5), then Ascended (6+) — matches the rarity ladder in implementation.md §7. */
+const TIER_COLORS = [0xcfcfcf, 0x55d17a, 0x4fa8e0, 0xb073e6, 0xf0a23c, 0xe6435c];
+function tierColor(tier: number): number {
+  return tier < TIER_COLORS.length ? TIER_COLORS[tier] : 0xffffff;
 }

@@ -51,6 +51,14 @@ export function setNickname(state: GameState, name: string): void {
   state.nickname = name.trim().slice(0, 16);
 }
 
+export function setAudioLevel(state: GameState, channel: 'master' | 'music' | 'sfx', value: number): void {
+  state.audio[channel] = Math.max(0, Math.min(1, value));
+}
+
+export function setAudioMuted(state: GameState, muted: boolean): void {
+  state.audio.muted = muted;
+}
+
 export function equipFromInbox(state: GameState, index: number): void {
   const item = state.inbox[index];
   if (!item) return;

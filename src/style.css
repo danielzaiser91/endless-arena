@@ -83,6 +83,11 @@ button.active { background: var(--gold); color: #1a1408; }
 .ascension-locked { color: #9aa7b8; font-size: 0.76rem; }
 
 .settings-lang-row { display: flex; align-items: center; gap: 0.5rem; }
+.settings-audio { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.6rem; }
+.settings-slider-row { display: flex; align-items: center; gap: 0.6rem; }
+.settings-slider-row span { flex: 0 0 110px; color: #9aa7b8; }
+.settings-slider-row input[type="range"] { flex: 1 1 auto; accent-color: var(--gold); }
+.settings-mute-row { display: flex; align-items: center; gap: 0.4rem; }
 
 .ascension-flash {
   position: fixed; inset: 0; z-index: 100; background: #fff; pointer-events: none;

@@ -68,6 +68,16 @@ export interface GameState {
 
   /** Leaderboard nickname (implementation.md §11) — empty until first submit. */
   nickname: string;
+
+  /** Persisted mixer levels, 0..1 (implementation.md §13). */
+  audio: AudioSettings;
+}
+
+export interface AudioSettings {
+  master: number;
+  music: number;
+  sfx: number;
+  muted: boolean;
 }
 
 function emptyAttributes(): Attributes {
@@ -119,5 +129,7 @@ export function initialState(seed = Date.now()): GameState {
     ascensions: 0,
 
     nickname: '',
+
+    audio: { master: 0.8, music: 0.6, sfx: 0.8, muted: false },
   };
 }

@@ -3,28 +3,38 @@ import { computeMults, type Mults, xpForLevel } from './formulas';
 import { enemyGold, enemyHp, enemyXp } from './enemies';
 import { rollItem } from './loot';
 import { rngInt, rngNext } from './rng';
-import { EQUIP_SLOTS, type GameState } from './state';
+import { EQUIP_SLOTS, type GameState, type Item } from './state';
+
+/** Kills and drops that happened during one tick() call — render uses this for kill/loot fx. */
+export interface TickResult extends Mults {
+  kills: number;
+  drops: Item[];
+}
 
 /**
  * The one tick shared by live play, offline progress, sim, and tests (architecture rule).
  * Pure: reads/writes only the passed GameState, no DOM/Three/Audio, no Math.random().
  */
-export function tick(state: GameState, dt: number): Mults {
+export function tick(state: GameState, dt: number): TickResult {
   const mults = computeMults(state);
   state.combatProgress += mults.dps * dt;
 
+  const drops: Item[] = [];
+  let kills = 0;
   let hp = enemyHp(state.arenaLevel);
   let guard = 0;
   while (state.combatProgress >= hp && guard < 10_000) {
     state.combatProgress -= hp;
-    onKill(state, mults);
+    const item = onKill(state, mults);
+    kills++;
+    if (item) drops.push(item);
     hp = enemyHp(state.arenaLevel);
     guard++;
   }
-  return mults;
+  return { ...mults, kills, drops };
 }
 
-function onKill(state: GameState, mults: Mults): void {
+function onKill(state: GameState, mults: Mults): Item | null {
   state.kills++;
   state.lifetimeKills++;
   state.gold += enemyGold(state.arenaLevel) * mults.fortuneMult;
@@ -37,7 +47,9 @@ function onKill(state: GameState, mults: Mults): void {
     const slot = EQUIP_SLOTS[rngInt(state.rng, EQUIP_SLOTS.length)];
     const item = rollItem(slot, state.arenaLevel, mults.lootMult, state.rng);
     resolveDrop(state, item);
+    return item;
   }
+  return null;
 }
 
 function gainXp(state: GameState, amount: number): void {

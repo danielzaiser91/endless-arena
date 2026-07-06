@@ -20,6 +20,7 @@ function migrate(saved: Partial<GameState>): GameState {
   merged.equipment = { ...template.equipment, ...saved.equipment };
   merged.forgeLevels = { ...template.forgeLevels, ...saved.forgeLevels };
   merged.echoInvested = { ...template.echoInvested, ...saved.echoInvested };
+  merged.audio = { ...template.audio, ...saved.audio };
   merged.rng = saved.rng ?? template.rng;
   merged.inbox = saved.inbox ?? [];
   merged.saveVersion = SAVE_VERSION;

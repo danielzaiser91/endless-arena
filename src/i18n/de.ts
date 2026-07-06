@@ -100,6 +100,10 @@ export const de: Record<keyof typeof en, string> = {
   'ascension.spend': 'Ausgeben',
 
   'settings.language': 'Sprache',
+  'settings.master': 'Gesamtlautstärke',
+  'settings.music': 'Musik',
+  'settings.sfx': 'Soundeffekte',
+  'settings.mute': 'Stumm',
 
   'ranking.title': 'Rangliste',
   'ranking.loading': 'Lädt…',

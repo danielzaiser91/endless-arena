@@ -98,6 +98,10 @@ export const en = {
   'ascension.spend': 'Spend',
 
   'settings.language': 'Language',
+  'settings.master': 'Master volume',
+  'settings.music': 'Music',
+  'settings.sfx': 'Sound effects',
+  'settings.mute': 'Mute',
 
   'ranking.title': 'Leaderboard',
   'ranking.loading': 'Loading…',

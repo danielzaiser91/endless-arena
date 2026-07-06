@@ -4,20 +4,30 @@
   --bg: #0a0a12;
 }
 
-#ui {
+body {
   font-family: system-ui, sans-serif;
   color: var(--text);
-  text-align: center;
 }
 
-#landing .sword { font-size: 3.5rem; }
-#landing h1 { letter-spacing: 0.08em; margin: 0.4rem 0; }
-#landing p { color: #9aa7b8; margin: 0.3rem 0; }
-#landing button {
-  margin-top: 0.8rem; padding: 0.4rem 1rem; border-radius: 6px;
-  border: 1px solid var(--gold); background: transparent; color: var(--gold);
-  cursor: pointer; font-size: 0.85rem;
+#arena-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+#lang-btn {
+  position: absolute; top: 12px; right: 12px; z-index: 20;
+  padding: 0.35rem 0.8rem; border-radius: 6px;
+  border: 1px solid var(--gold); background: rgba(10, 10, 18, 0.55); color: var(--gold);
+  cursor: pointer; font-size: 0.8rem;
 }
+
+#hud {
+  position: absolute; top: 12px; left: 12px; z-index: 20;
+  background: rgba(10, 10, 18, 0.55); border: 1px solid rgba(232, 182, 76, 0.4);
+  border-radius: 8px; padding: 0.5rem 0.8rem; font-size: 0.82rem;
+  backdrop-filter: blur(6px);
+}
+#hud .hud-stats { display: flex; gap: 0.9rem; flex-wrap: wrap; }
+#hud .hud-stats span:nth-child(1) { color: var(--gold); }
+#hud .hud-note { margin-top: 0.3rem; color: #9aa7b8; font-size: 0.76rem; }
+#hud .hud-note:empty { display: none; }
 
 /* ── Update banner (ported from Stardust to Singularity, implementation.md §16) ── */
 #update-banner {

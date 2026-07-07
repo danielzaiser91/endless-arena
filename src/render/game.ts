@@ -4,7 +4,7 @@ import { tick } from '../core/tick';
 import { enemyHp, isBoss } from '../core/enemies';
 import { deserialize, serialize } from '../core/save';
 import { initialState, type GameState, type Item } from '../core/state';
-import type { Mults } from '../core/formulas';
+import { computeMults, type Mults } from '../core/formulas';
 import { setLang, t } from '../i18n';
 import { installDevConsole } from '../dev/console';
 import { createHud, type Hud } from '../ui/hud';
@@ -86,6 +86,8 @@ export class GameView {
     document.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).tagName === 'BUTTON') playSfx('click');
     });
+
+    this.hud.update(this.state, computeMults(this.state).dps);
 
     this.raf = requestAnimationFrame(this.frame);
   }
